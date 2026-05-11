@@ -1,15 +1,15 @@
 import streamlit as st
 from openai import OpenAI
 
-# 페이지 설정 및 제목
-st.set_page_config(page_title="MBTI 판별 챗봇", page_icon="🧪")
-st.title("🧪 MBTI 맞춤형 챗봇")
+# 페이지 설정 및 제목 변경
+st.set_page_config(page_title="너 T야?", page_icon="🧐")
+st.title("🧐 너 T야?") # 요청하신 제목으로 변경
 st.write(
-    "몇 가지 질문을 통해 당신의 MBTI를 추측해 드립니다. "
-    "대화를 시작하면 챗봇이 질문을 던질 거예요!"
+    "채팅을 시작하면 챗봇이 당신의 성향을 파악하기 위한 질문을 던집니다. "
+    "솔직하게 답변하다 보면 당신의 MBTI를 맞출 수 있을지도 몰라요!"
 )
 
-# API 키 입력 (보안을 위해 password 타입 유지)
+# API 키 입력
 openai_api_key = st.text_input("OpenAI API Key", type="password")
 
 if not openai_api_key:
@@ -19,37 +19,35 @@ else:
 
     # 세션 상태 초기화
     if "messages" not in st.session_state:
-        # 시스템 프롬프트: 챗봇의 정체성과 임무를 부여합니다.
+        # 시스템 프롬프트: MBTI 분석 전문가로서의 정체성 강화
         st.session_state.messages = [
             {
                 "role": "system", 
                 "content": (
-                    "너는 MBTI 전문가야. 사용자와의 대화를 통해 사용자의 MBTI를 맞추는 것이 목표야. "
-                    "한 번에 너무 많은 질문을 하지 말고, 하나씩 질문하면서 답변을 유도해줘. "
-                    "사용자의 답변에서 에너지 방향(E/I), 인식 기능(S/N), 판단 기능(T/F), 생활 양식(J/P)의 특징을 파악해. "
-                    "모든 대화는 친절한 한국어로 진행해줘."
+                    "너는 상대방의 대화를 통해 MBTI를 추측하는 전문가야. "
+                    "상대방이 '너 T야?'라는 소리를 듣지 않도록 공감해주면서도 날카롭게 성향을 분석해줘. "
+                    "질문은 한 번에 하나씩만 하고, 답변을 받으면 그에 대한 리액션을 짧게 한 뒤 다음 질문을 해줘. "
+                    "4가지 지표(E/I, S/N, T/F, J/P)를 모두 확인하면 최종적으로 추측하는 MBTI를 알려줘."
                 )
             },
             {
                 "role": "assistant",
-                "content": "안녕하세요! 당신의 MBTI가 무엇인지 함께 알아볼까요? 먼저, 쉬는 날에 주로 무엇을 하며 시간을 보내시는지 궁금해요!"
+                "content": "반가워요! 당신의 MBTI를 파헤쳐 보겠습니다. 😎 \n\n 첫 번째 질문입니다! 주말에 갑자기 친구가 '지금 집 앞인데 나올래?'라고 한다면, 당신의 솔직한 속마음은 어떤가요?"
             }
         ]
 
-    # 채팅 메시지 표시 (시스템 메시지는 제외)
+    # 채팅 메시지 표시
     for message in st.session_state.messages:
         if message["role"] != "system":
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-    # 사용자 입력 처리
-    if prompt := st.chat_input("답변을 입력하세요..."):
-        # 사용자 메시지 저장 및 표시
+    # 사용자 입력 및 챗봇 응답 처리
+    if prompt := st.chat_input("답변을 입력해 보세요..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # OpenAI API를 통한 답변 생성
         with st.chat_message("assistant"):
             stream = client.chat.completions.create(
                 model="gpt-3.5-turbo",
@@ -61,10 +59,9 @@ else:
             )
             response = st.write_stream(stream)
         
-        # 챗봇 답변 저장
         st.session_state.messages.append({"role": "assistant", "content": response})
 
-# 초기화 버튼 (필요할 경우)
-if st.button("대화 초기화"):
-    st.session_state.messages = []
+# 다시 시작하기 버튼
+if st.sidebar.button("다시 테스트하기"):
+    st.session_state.clear()
     st.rerun()
